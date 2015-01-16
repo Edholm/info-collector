@@ -13,7 +13,7 @@ SRCS   := $(wildcard *.c)
 all: $(APP)
 
 $(APP):
-	mkdir -p bin
+	@mkdir -p bin
 	@$(CC) $(CFLAGS) $(LIBS) -I. -o bin/$@ ${SRCS}
 
 
