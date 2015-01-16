@@ -3,33 +3,31 @@
 #include <jansson.h> /* JSON support */
 #include "blocks.h"
 
+static const char *HEADER = "{\"version\":1}\n[[],\n";
+
+/* Setup the blocks we want and return the "head" of the LinkedList */
+Block* setup_blocks() {
+    Block *b = malloc(sizeof(Block));
+    b->full_text = "apabepa";
+
+    return b;
+}
+
 int main(void)
 {
-    int counter = 0;
-    char *txt = malloc(10), *tmp;
-    json_t *footer;
-
-    //printf("{\"version\":1}\n[[],\n");
+    printf(HEADER);
     fflush(stdout);
-    usleep(20000);
-    Block b3 = {"bepa", "red", 1, 9, "b", 9, center, .urgent =1};
-    Block b2 = {"apa", .next=&b3};
-    Block b = {txt, "green", .next=&b2};
-    //while(1) {
-        sprintf(txt, "TheGrid (-%i db)", counter);
-        //footer = block_to_json(&b);
-        //tmp = json_dumps(footer, JSON_COMPACT);
+    /* Give i3bar time to read the header */
+    sleep(1);
 
-        //printf("%s,\n", tmp);
+    Block *first_block = setup_blocks();
+    json_t *tmp;
+    while(1) {
+        tmp = build_block_chain(first_block);
+        printf("%s\n", json_dumps(tmp, JSON_INDENT(4)));
         fflush(stdout);
-
-        counter++;
-        //json_decref(footer);
-        //free(tmp);
-        //sleep(1);
-    //}
-    printf("%s\n", json_dumps(build_block_chain(&b), JSON_INDENT(4)));
-
-    free(txt);
+        json_decref(tmp);
+        sleep(1);
+    }
     return 0;
 }
