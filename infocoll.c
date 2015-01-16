@@ -4,6 +4,11 @@
 #include <jansson.h> /* JSON support */
 #include <string.h>
 
+/* Format specifiers */
+#define STR_F  "ss"
+#define BOOL_F "sb"
+#define INT_F  "si"
+
 const char *ALIGN_STR[] = {"default", "left", "center", "right"};
 enum Align {
     DEFAULT,
@@ -21,24 +26,26 @@ typedef struct Block {
     char *short_text;
     uint8_t min_width;
     enum Align align;
+    uint8_t urgent;
     struct Block *next;
 } Block;
 
 /* Take an i3bar block and convert it to a json_t object */
 json_t *block_to_json(Block *b) {
-    char *c_form   = (b->color)           ? "ss" : "";
-    char *sep_form = (b->separator)       ? "sb" : "";
-    char *sbw_form = (b->sep_block_width) ? "si" : "";
-    char *st_form  = (b->short_text)      ? "ss" : "";
-    char *mw_form  = (b->min_width)       ? "si" : "";
-    char *a_form   = (b->align)           ? "ss" : "";
+    char *c_form   = (b->color)           ? STR_F  : "";
+    char *sep_form = (b->separator)       ? BOOL_F : "";
+    char *sbw_form = (b->sep_block_width) ? INT_F  : "";
+    char *st_form  = (b->short_text)      ? STR_F  : "";
+    char *mw_form  = (b->min_width)       ? INT_F  : "";
+    char *a_form   = (b->align)           ? STR_F  : "";
+    char *u_form   = (b->urgent)          ? BOOL_F : "";
 
-    // 7 fields in the struct and two {}... Magic numbers FTW
-    char *format_str = malloc(sizeof(char) * 7*2 + (sizeof(char) * 2));
+    // 8 fields in the struct and two {}... Magic numbers FTW
+    char *format_str = malloc(sizeof(char) * 8*2 + (sizeof(char) * 2));
 
-    sprintf(format_str, "{ss, %s%s%s%s%s%s}",
+    sprintf(format_str, "{ss, %s%s%s%s%s%s%s}",
             c_form, sep_form, sbw_form,
-            st_form, mw_form, a_form);
+            st_form, mw_form, a_form, u_form);
     json_t *result = json_pack(format_str,
                     "full_text", b->full_text,
                     "color", b->color,
@@ -46,7 +53,8 @@ json_t *block_to_json(Block *b) {
                     "separator_block_width", b->sep_block_width,
                     "short_text", b->short_text,
                     "min_width", b->min_width,
-                    "align", ALIGN_STR[b->align]);
+                    "align", ALIGN_STR[b->align],
+                    "urgent", b->urgent);
     free(format_str);
     return result;
 }
@@ -70,7 +78,7 @@ int main(void)
     //printf("{\"version\":1}\n[[],\n");
     fflush(stdout);
     usleep(20000);
-    Block b3 = {"bepa", "red", 1, 9, "b", 9, center};
+    Block b3 = {"bepa", "red", 1, 9, "b", 9, center, .urgent =1};
     Block b2 = {"apa", .next=&b3};
     Block b = {txt, "green", .next=&b2};
     //while(1) {
