@@ -1,0 +1,2 @@
+Collects various information about the system, such as currently associated AP
+and memory usage. Outputs this information in a format that i3bar can read.
