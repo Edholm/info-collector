@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <stdint.h>
+#include <stdint.h>  /* uint8_t etc */
 #include <unistd.h>  /* sleep() */
 #include <jansson.h> /* JSON support */
 #include <string.h>
@@ -32,20 +32,24 @@ typedef struct Block {
 
 /* Take an i3bar block and convert it to a json_t object */
 json_t *block_to_json(Block *b) {
-    char *c_form   = (b->color)           ? STR_F  : "";
-    char *sep_form = (b->separator)       ? BOOL_F : "";
-    char *sbw_form = (b->sep_block_width) ? INT_F  : "";
-    char *st_form  = (b->short_text)      ? STR_F  : "";
-    char *mw_form  = (b->min_width)       ? INT_F  : "";
-    char *a_form   = (b->align)           ? STR_F  : "";
-    char *u_form   = (b->urgent)          ? BOOL_F : "";
+    char *format_specifiers[] = {
+        (b->color)           ? STR_F  : "",
+        (b->separator)       ? BOOL_F : "",
+        (b->sep_block_width) ? INT_F  : "",
+        (b->short_text)      ? STR_F  : "",
+        (b->min_width)       ? INT_F  : "",
+        (b->align)           ? STR_F  : "",
+        (b->urgent)          ? BOOL_F : "",
+    };
 
-    // 8 fields in the struct and two {}... Magic numbers FTW
-    char *format_str = malloc(sizeof(char) * 8*2 + (sizeof(char) * 2));
+    size_t elems = sizeof(format_specifiers) / sizeof(char*);
+    char *specifiers = calloc(elems, 2);
+    for (int i = 0; i < elems; i++) {
+        strcat(specifiers, format_specifiers[i]);
+    }
 
-    sprintf(format_str, "{ss, %s%s%s%s%s%s%s}",
-            c_form, sep_form, sbw_form,
-            st_form, mw_form, a_form, u_form);
+    char *format_str = calloc(elems + 4, sizeof(char));
+    sprintf(format_str, "{ss%s}", specifiers);
     json_t *result = json_pack(format_str,
                     "full_text", b->full_text,
                     "color", b->color,
@@ -56,6 +60,7 @@ json_t *block_to_json(Block *b) {
                     "align", ALIGN_STR[b->align],
                     "urgent", b->urgent);
     free(format_str);
+    free(specifiers);
     return result;
 }
 
